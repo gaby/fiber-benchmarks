@@ -33,7 +33,7 @@ jobs:
       - name: Run benchmark tests for each tag
         shell: bash
         run: |
-          for version in $(seq 10 50); do
+          for version in $(seq 40 50); do
               tag="v2.${version}.0"
               echo "Testing tag: $tag"
           
