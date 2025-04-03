@@ -1,0 +1,66 @@
+name: Fiber Benchmark Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout benchmark repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Clone gofiber repository
+        run: |
+          git clone https://github.com/gofiber/fiber.git gofiber
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24
+
+      - name: Install wrk and curl
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wrk curl
+
+      - name: Run benchmark tests for each tag
+        shell: bash
+        run: |
+          for version in $(seq 10 50); do
+              tag="v2.${version}.0"
+              echo "Testing tag: $tag"
+          
+              # Checkout the tag in the gofiber repository
+              (cd gofiber && git checkout $tag --quiet) || { echo "checkout failed for tag $tag"; exit 1; }
+          
+              # Update dependencies in the bench module
+              pushd bench > /dev/null
+              go mod tidy >/dev/null 2>&1 || { echo "go mod failed for tag $tag"; exit 1; }
+          
+              # Start the benchmark server (which uses the local gofiber code)
+              setsid go run main.go >/dev/null 2>&1 &
+              SERVER_PID=$!
+              sleep 5
+
+              # Run the wrk benchmark
+              result=$(wrk -t16 -c64 -d60s http://localhost:8080 2>/dev/null | grep "Requests/sec")
+          
+              # Kill the entire process group running the server
+              kill -- -$SERVER_PID 2>/dev/null
+              wait $SERVER_PID 2>/dev/null
+          
+              # Print the benchmark result
+              if [[ $result =~ ([0-9]+\.[0-9]+) ]]; then
+                  echo "$tag: ${BASH_REMATCH[1]}"
+              else
+                  echo "$tag: N/A"
+              fi
+              popd > /dev/null
+          done
