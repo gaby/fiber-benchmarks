@@ -43,9 +43,6 @@ jobs:
               # Update dependencies in the bench module
               pushd bench > /dev/null
               go mod tidy
-          
-              # Start the benchmark server (which uses the local gofiber code)
-              echo "Starting server"
 
               # Start the Go server in a new process group
               setsid go run main.go >/dev/null 2>&1 &
@@ -56,7 +53,6 @@ jobs:
                   if curl -s http://localhost:8080 >/dev/null; then
                       break
                   fi
-                  echo "Waiting for server..."
                   sleep 1
               done
 
@@ -70,11 +66,19 @@ jobs:
               echo "Starting benchmark"
               result=$(wrk -t16 -c64 -d60s http://localhost:8080 2>/dev/null | grep "Requests/sec")
 
-              # Kill the entire process group running the server
+              # Kill the entire process group running the server and ignore exit code 143
               kill -- -$SERVER_PID 2>/dev/null || true
               wait $SERVER_PID 2>/dev/null || true
 
-          
+              # Wait until port 8080 is closed before proceeding
+              echo "Waiting for $tag server to shut down..."
+              for i in {1..10}; do
+                  if ! curl -s http://localhost:8080 >/dev/null; then
+                      break
+                  fi
+                  sleep 1
+              done
+
               # Print the benchmark result
               if [[ $result =~ ([0-9]+\.[0-9]+) ]]; then
                   echo "$tag: ${BASH_REMATCH[1]}"
