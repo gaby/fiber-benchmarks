@@ -23,7 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.20
+          go-version: '1.20.x'
 
       - name: Install wrk and curl
         run: |
@@ -43,7 +43,6 @@ jobs:
               # Update dependencies in the bench module
               pushd bench > /dev/null
               go mod tidy
-              exit
           
               # Start the benchmark server (which uses the local gofiber code)
               setsid go run main.go >/dev/null 2>&1 &
