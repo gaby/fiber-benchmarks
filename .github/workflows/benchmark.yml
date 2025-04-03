@@ -46,9 +46,25 @@ jobs:
           
               # Start the benchmark server (which uses the local gofiber code)
               echo "Starting server"
+
+              # Start the Go server in a new process group
               setsid go run main.go >/dev/null 2>&1 &
               SERVER_PID=$!
-              sleep 10
+
+              # Wait for server to be ready (max 25 seconds)
+              for i in {1..25}; do
+                  if curl -s http://localhost:8080 >/dev/null; then
+                      break
+                  fi
+                  echo "Waiting for server..."
+                  sleep 1
+              done
+
+              # Check if the server is still running
+              if ! kill -0 $SERVER_PID 2>/dev/null; then
+                  echo "go run failed"
+                  exit 1
+              fi
 
               # Run the wrk benchmark
               echo "Starting benchmark"
