@@ -46,14 +46,13 @@ jobs:
           
               # Start the benchmark server (which uses the local gofiber code)
               echo "Starting server"
-              go run main.go
+              setsid go run main.go >/dev/null 2>&1 &
               SERVER_PID=$!
-              sleep 5
+              sleep 10
 
               # Run the wrk benchmark
               echo "Starting benchmark"
-              #result=$(wrk -t16 -c64 -d60s http://localhost:8080 2>/dev/null | grep "Requests/sec")
-              wrk -t16 -c64 -d60s http://localhost:8080
+              result=$(wrk -t16 -c64 -d60s http://localhost:8080 2>/dev/null | grep "Requests/sec")
           
               # Kill the entire process group running the server
               kill -- -$SERVER_PID 2>/dev/null
