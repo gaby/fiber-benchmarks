@@ -42,7 +42,8 @@ jobs:
           
               # Update dependencies in the bench module
               pushd bench > /dev/null
-              go mod tidy >/dev/null 2>&1 || { echo "go mod failed for tag $tag"; exit 1; }
+              go mod tidy
+              exit
           
               # Start the benchmark server (which uses the local gofiber code)
               setsid go run main.go >/dev/null 2>&1 &
