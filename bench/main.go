@@ -9,5 +9,5 @@ func main() {
     app.Get("/", func(c *fiber.Ctx) error {
         return nil
     })
-    app.Listen(":8080")
+    app.Listen("0.0.0.0:8080")
 }
