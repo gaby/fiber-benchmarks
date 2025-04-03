@@ -46,7 +46,7 @@ jobs:
           
               # Start the benchmark server (which uses the local gofiber code)
               echo "Starting server"
-              setsid go run main.go >/dev/null 2>&1 &
+              go run main.go
               SERVER_PID=$!
               sleep 5
 
