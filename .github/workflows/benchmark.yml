@@ -68,11 +68,12 @@ jobs:
 
               # Run the wrk benchmark
               echo "Starting benchmark"
-              wrk -t16 -c64 -d60s http://localhost:8080
-          
+              result=$(wrk -t16 -c64 -d60s http://localhost:8080 2>/dev/null | grep "Requests/sec")
+
               # Kill the entire process group running the server
-              kill -- -$SERVER_PID 2>/dev/null
-              wait $SERVER_PID 2>/dev/null
+              kill -- -$SERVER_PID 2>/dev/null || true
+              wait $SERVER_PID 2>/dev/null || true
+
           
               # Print the benchmark result
               if [[ $result =~ ([0-9]+\.[0-9]+) ]]; then
