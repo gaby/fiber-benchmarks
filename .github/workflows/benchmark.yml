@@ -68,7 +68,7 @@ jobs:
 
               # Run the wrk benchmark
               echo "Starting benchmark"
-              result=$(wrk -t16 -c64 -d60s http://localhost:8080 2>/dev/null | grep "Requests/sec")
+              wrk -t16 -c64 -d60s http://localhost:8080
           
               # Kill the entire process group running the server
               kill -- -$SERVER_PID 2>/dev/null
